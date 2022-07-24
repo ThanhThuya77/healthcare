@@ -1,0 +1,51 @@
+.login, .register {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  background: #458fdc;
+}
+
+.login {
+
+  .title {
+    font-size: 24px;
+    text-align: start;
+  }
+  
+  .ant-form {
+    padding: 24px;
+    background: white;
+    border-radius: 10px;
+    width: 400px;
+
+    .ant-form-item-label {
+      text-align: start;
+    }
+
+    .ant-btn {
+      min-width: 120px;
+    }
+
+    .ant-alert-error {
+      margin-bottom: 30px;
+    }
+  }
+
+  .loginBtn {
+    margin-top: 20px;
+  }
+}
+
+.register {
+
+  background-color: transparent;
+
+  form {
+    width: 600px;
+    margin: 0 auto;
+  }
+
+}
