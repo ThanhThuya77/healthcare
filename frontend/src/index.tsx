@@ -1,10 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import axios from 'axios';
 import './index.scss';
 import 'antd/dist/antd.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { StoreProvider } from './store/Context';
+
+axios.defaults.baseURL = `//localhost:5000`;
+
+axios.interceptors.response.use(
+  (response) => {
+    return response.data;
+  },
+  function async(error) {
+    return Promise.reject(error.response?.data);
+  }
+);
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

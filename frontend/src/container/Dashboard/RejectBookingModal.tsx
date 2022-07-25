@@ -1,23 +1,50 @@
 import React, { useState } from 'react';
-import moment, { Moment } from 'moment';
-import { Col, DatePicker, Form, Input, Modal, Row, Select, Space } from 'antd';
+import { Form, Input, Modal } from 'antd';
+import { BookingStatus, IBooking, updateBookingAPI } from '../../api/Booking';
+import {
+  IconTypeNotification,
+  openNotification,
+} from '../../component/Notification';
 
 const { TextArea } = Input;
-
-interface IProposedDates {
-  [key: string]: Moment;
-}
 
 interface IProps {
   open: boolean;
   setOpenModal: (value: boolean) => void;
+  handleUpdateListBooking: (data: IBooking) => void;
+  bookingData: IBooking;
 }
 
-const RejectBookingModal = ({ open, setOpenModal }: IProps) => {
+const RejectBookingModal = ({
+  open,
+  setOpenModal,
+  handleUpdateListBooking,
+  bookingData,
+}: IProps) => {
   const [form] = Form.useForm();
 
-  const handleRejectBooking = (text: string) => {
-    console.log('handleRejectBooking');
+  const handleRejectBooking = async (data: any) => {
+    try {
+      const updateBooking = {
+        ...bookingData,
+        rejectedReason: data.reason,
+        status: BookingStatus.rejected,
+      };
+      const result = await updateBookingAPI(
+        bookingData.id || '',
+        updateBooking
+      );
+
+      openNotification(
+        IconTypeNotification.success,
+        'Rejected Booking successfully'
+      );
+      handleUpdateListBooking(updateBooking);
+      setOpenModal(false);
+      form.resetFields();
+    } catch (error: any) {
+      openNotification(IconTypeNotification.error, error.message);
+    }
   };
 
   return (

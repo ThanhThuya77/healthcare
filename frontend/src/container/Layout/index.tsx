@@ -8,15 +8,19 @@ import { commonState } from '../../store/constants';
 const { Text } = Typography;
 const { Header, Content } = Layout;
 
-const LayoutComponent = ({ children }) => {
+interface IProps {
+  children: React.ReactNode;
+}
+
+const LayoutComponent = ({ children }: IProps) => {
   const { state, dispatch } = useContext(Context);
 
   const handleLogout = () => {
     dispatch({
       type: commonState.SET_LOGIN_INFO,
-      payload: { isLogin: false, isAdmin: false },
+      payload: { id: null, isAdmin: false },
     });
-    sessionStorage.removeItem('isLogin');
+    sessionStorage.removeItem('userInfo');
   };
 
   const profileActions = (
@@ -30,38 +34,6 @@ const LayoutComponent = ({ children }) => {
             </Button>
           ),
         },
-        {
-          key: 'change Role Admin',
-          label: (
-            <Button
-              type="text"
-              onClick={() => {
-                dispatch({
-                  type: commonState.SET_LOGIN_INFO,
-                  payload: { isLogin: true, isAdmin: true },
-                });
-              }}
-            >
-              change Role Admin
-            </Button>
-          ),
-        },
-        {
-          key: 'change Role HR',
-          label: (
-            <Button
-              type="text"
-              onClick={() => {
-                dispatch({
-                  type: commonState.SET_LOGIN_INFO,
-                  payload: { isLogin: true, isAdmin: false },
-                });
-              }}
-            >
-              change Role HR
-            </Button>
-          ),
-        },
       ]}
     />
   );
@@ -69,7 +41,7 @@ const LayoutComponent = ({ children }) => {
   return (
     <Layout>
       <Header>
-        {state.isLogin ? (
+        {state.id ? (
           <Dropdown overlay={profileActions} placement="bottomRight">
             <div>
               {state.fullName ? (

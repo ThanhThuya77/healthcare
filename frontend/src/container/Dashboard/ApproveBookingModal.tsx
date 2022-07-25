@@ -1,23 +1,54 @@
 import React, { useState } from 'react';
-import moment, { Moment } from 'moment';
+import moment from 'moment';
 import { Form, Modal, Radio, Space } from 'antd';
+import { BookingStatus, IBooking, updateBookingAPI } from '../../api/Booking';
+import {
+  IconTypeNotification,
+  openNotification,
+} from '../../component/Notification';
 
 interface IProps {
   open: boolean;
   setOpenModal: (value: boolean) => void;
+  handleUpdateListBooking: (data: IBooking) => void;
+  bookingData: IBooking;
 }
 
-const ApproveBookingModal = ({ open, setOpenModal }: IProps) => {
+const ApproveBookingModal = ({
+  open,
+  setOpenModal,
+  handleUpdateListBooking,
+  bookingData,
+}: IProps) => {
   const [selectedDate, setSelectedDate] = useState(1);
 
   const [form] = Form.useForm();
 
   const onChangeRadio = (date: any) => {
     setSelectedDate(date);
-    console.log('handleCreateBooking', date);
   };
-  const handleApproveBooking = (data: any) => {
-    console.log('handleApproveBooking', data);
+  const handleApproveBooking = async (data: any) => {
+    try {
+      const updateBooking = {
+        ...bookingData,
+        confirmProposedDate: data.proposedDate,
+        status: BookingStatus.approved,
+      };
+      const result = await updateBookingAPI(
+        bookingData.id || '',
+        updateBooking
+      );
+
+      openNotification(
+        IconTypeNotification.success,
+        'Approved Booking successfully'
+      );
+      handleUpdateListBooking(updateBooking);
+      setOpenModal(false);
+      form.resetFields();
+    } catch (error: any) {
+      openNotification(IconTypeNotification.error, error.message);
+    }
   };
 
   return (
@@ -27,7 +58,7 @@ const ApproveBookingModal = ({ open, setOpenModal }: IProps) => {
       onOk={form.submit}
       onCancel={() => {
         setOpenModal(false);
-        form.resetFields({} as any);
+        form.resetFields();
       }}
       okText="Approve"
     >
@@ -51,9 +82,11 @@ const ApproveBookingModal = ({ open, setOpenModal }: IProps) => {
             style={{ paddingLeft: 30 }}
           >
             <Space direction="vertical">
-              <Radio value={1}>Option A</Radio>
-              <Radio value={2}>Option B</Radio>
-              <Radio value={3}>Option C</Radio>
+              {bookingData.proposedDate?.map((item) => (
+                <Radio key={item} value={item}>
+                  {moment(item).format('MM-DD-YYYY HH:mm:ss')}
+                </Radio>
+              ))}
             </Space>
           </Radio.Group>
         </Form.Item>

@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import moment, { Moment } from 'moment';
 import { Col, DatePicker, Form, Input, Modal, Row, Select, Space } from 'antd';
+import { createBookingAPI, IBooking } from '../../api/Booking';
+import { openNotification } from '../../component/Notification';
+import { IconTypeNotification } from '../../component/Notification';
+import { Context } from '../../store/Context';
 
 interface IProposedDates {
   [key: string]: Moment;
@@ -9,9 +13,15 @@ interface IProposedDates {
 interface IProps {
   open: boolean;
   setOpenModal: (value: boolean) => void;
+  handleUpdateListBooking: (data: IBooking) => void;
 }
 
-const CreateBookingModal = ({ open, setOpenModal }: IProps) => {
+const CreateBookingModal = ({
+  open,
+  setOpenModal,
+  handleUpdateListBooking,
+}: IProps) => {
+  const { state } = useContext(Context);
   const [proposedDates, setProposeDates] = useState<IProposedDates>({});
 
   const [form] = Form.useForm();
@@ -26,15 +36,27 @@ const CreateBookingModal = ({ open, setOpenModal }: IProps) => {
     return (current && current <= moment().add(1, 'days')) || isExisted;
   };
 
-  const handleCreateBooking = (data: any) => {
-    console.log('handleCreateBooking', data);
+  const handleCreateBooking = async (data: any) => {
+    try {
+      const result = await createBookingAPI(state.id || '', data);
+      openNotification(
+        IconTypeNotification.success,
+        'Created Booking successfully'
+      );
+      handleUpdateListBooking(result);
+      setOpenModal(false);
+      form.resetFields();
+      setProposeDates({});
+    } catch (error: any) {
+      openNotification(IconTypeNotification.error, error.message);
+    }
   };
 
   const handleSetProposeDates = (date: any, pos: string) => {
     const data = { ...proposedDates, [pos]: date };
     const inValid = Object.keys(data).some((item) => !data[item]);
     if (!inValid && Object.keys(data).length === 3) {
-      form.setFieldsValue({ proposedDate: data });
+      form.setFieldsValue({ proposedDate: Object.values(data) });
     }
     setProposeDates(data);
   };
@@ -59,7 +81,7 @@ const CreateBookingModal = ({ open, setOpenModal }: IProps) => {
       onOk={form.submit}
       onCancel={() => {
         setOpenModal(false);
-        form.resetFields({} as any);
+        form.resetFields();
       }}
       okText="Create"
     >

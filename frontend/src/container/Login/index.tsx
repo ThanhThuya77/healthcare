@@ -3,39 +3,33 @@ import './styles.scss';
 import { Form, Input, Button, Typography } from 'antd';
 import { Context } from '../../store/Context';
 import { commonState } from '../../store/constants';
+import { loginAPI } from '../../api/Login';
 
 const { Text } = Typography;
 
-const layout = {
-  labelCol: {
-    span: 8,
-  },
-};
+const Login = () => {
+  const { dispatch } = useContext(Context);
+  const [messageError, setMessageError] = useState<string>('');
 
-interface IProps {}
+  const onFinish = async (values: any) => {
+    try {
+      const result = await loginAPI(values);
 
-const Login = ({}: IProps) => {
-  const { state, dispatch } = useContext(Context);
+      dispatch({
+        type: commonState.SET_LOGIN_INFO,
+        payload: result,
+      });
 
-  //
-
-  const onFinish = (values: any) => {
-    console.log('values', values);
-
-    dispatch({
-      type: commonState.SET_LOGIN_INFO,
-      payload: { isLogin: true, isAdmin: false, fullName: 'Thuy Nguyen' },
-    });
-    sessionStorage.setItem(
-      'isLogin',
-      JSON.stringify({ isLogin: true, isAdmin: false, fullName: 'Thuy Nguyen' })
-    );
+      sessionStorage.setItem('userInfo', JSON.stringify(result));
+    } catch (error: any) {
+      setMessageError(error.message);
+    }
   };
 
   return (
     <div className="login">
       <Form
-        {...layout}
+        labelCol={{ span: 8 }}
         name="basic"
         initialValues={{
           remember: true,
@@ -47,7 +41,7 @@ const Login = ({}: IProps) => {
         </Form.Item>
         <Form.Item
           label="Email"
-          name="email"
+          name="userName"
           rules={[
             {
               required: true,
@@ -70,6 +64,8 @@ const Login = ({}: IProps) => {
         >
           <Input.Password />
         </Form.Item>
+
+        <Text type="danger">{messageError}</Text>
 
         <Form.Item>
           <Button type="primary" htmlType="submit" className="loginBtn">

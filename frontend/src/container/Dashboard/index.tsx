@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from 'react';
-import { Moment } from 'moment';
 import './styles.scss';
 
 import { Button, Modal, Space, Spin, Table, Tag } from 'antd';
@@ -8,101 +7,110 @@ import { Context } from '../../store/Context';
 import CreateBookingModal from './CreateBookingModal';
 import RejectBookingModal from './RejectBookingModal';
 import ApproveBookingModal from './ApproveBookingModal';
+import {
+  BookingStatus,
+  getAllBookingAPI,
+  getAllMyBookingAPI,
+  IBooking,
+  IStatus,
+  removeBookingAPI,
+} from '../../api/Booking';
+import {
+  IconTypeNotification,
+  openNotification,
+} from '../../component/Notification';
 
 const { confirm } = Modal;
-
-export enum BookingStatus {
-  approved = 'Approved',
-  rejected = 'Rejected',
-  pendingReview = 'Pending Review',
-}
-
-type IStatus = `${BookingStatus}`;
-
-interface IBooking {
-  event: string;
-  location: string;
-  status: IStatus;
-  proposedDate?: Moment;
-}
 
 interface IProps {}
 
 const Dashboard = ({}: IProps) => {
-  const { state, dispatch } = useContext(Context);
-  const [loading, setLoading] = useState<boolean>(false);
+  const { state } = useContext(Context);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [allBooking, setAllBooking] = useState<IBooking[]>([]);
+  const [bookingData, setBookingData] = useState<IBooking>({} as IBooking);
   const [openCreateModal, setOpenCreateModal] = useState<boolean>(false);
   const [openRejectModal, setOpenRejectModal] = useState<boolean>(false);
   const [openApproveModal, setOpenApproveModal] = useState<boolean>(false);
 
   useEffect(() => {
-    // setLoading(true);
-    // fetch('/getBookingEvents')
-    //   .then((response) => response.json())
-    //   .then((data) => {console.log(data); setLoading(true);});
-  }, []);
+    const getData = async () => {
+      let result;
+      if (state.isAdmin) {
+        result = await getAllBookingAPI();
+      } else {
+        result = await getAllMyBookingAPI(state.id || '');
+      }
+      setAllBooking(result);
+      setLoading(false);
+    };
+    if (state.id) {
+      getData();
+    }
+  }, [state]);
 
-  const data = [
-    {
-      key: '1',
-      event: 'Health Talk',
-      location: 'Hồ Chí Minh',
-      status: BookingStatus.pendingReview,
-    },
-    {
-      key: '2',
-      event: 'Wellness Events',
-      location: 'Hồ Chí Minh',
-      status: BookingStatus.approved,
-    },
-    {
-      key: '3',
-      event: 'Fitness Activities',
-      location: 'Hồ Chí Minh',
-      status: BookingStatus.rejected,
-    },
-  ];
-
-  const handleCancelBooking = () => {
+  const handleCancelBooking = (id: string) => {
     confirm({
       title: 'Do you Want to cancel this booking?',
       icon: <ExclamationCircleOutlined />,
       centered: true,
 
-      onOk() {
-        console.log('OK');
+      async onOk() {
+        try {
+          const result = await removeBookingAPI(id);
+          openNotification(
+            IconTypeNotification.success,
+            'Cancel Booking successfully'
+          );
+          handleUpdateListBooking({ id } as IBooking, true);
+        } catch (error: any) {
+          openNotification(IconTypeNotification.error, error.message);
+        }
       },
-
-      // onCancel() {
-      //   console.log('Cancel');
-      // },
     });
   };
 
-  const handleApproveBooking = () => {
-    console.log('handleApproveBooking');
-  };
+  const handleUpdateListBooking = (data: IBooking, isRemove = false) => {
+    let newData = [...allBooking];
+    const pos = newData.findIndex((booking) => booking.id === data.id);
 
-  const handleRejectBooking = () => {
-    console.log('handleRejectBooking');
+    if (pos === -1) {
+      newData = [...allBooking, data];
+    } else {
+      if (isRemove) {
+        newData = allBooking.filter((item) => item.id !== data.id);
+      } else {
+        newData[pos] = data;
+        setBookingData({} as IBooking);
+      }
+    }
+    setAllBooking(newData);
   };
 
   const renderActionBtns = (record: IBooking) => {
     return record.status === BookingStatus.pendingReview ? (
       !state.isAdmin ? (
-        <Button onClick={handleCancelBooking}>Cancel</Button>
+        <Button onClick={() => handleCancelBooking(record.id || '')}>
+          Cancel
+        </Button>
       ) : (
         <Space>
           <Button
             className="successBtn"
-            onClick={() => setOpenApproveModal(true)}
+            onClick={() => {
+              setOpenApproveModal(true);
+              setBookingData(record);
+            }}
           >
             Approve
           </Button>
           <Button
             type="primary"
             danger
-            onClick={() => setOpenRejectModal(true)}
+            onClick={() => {
+              setOpenRejectModal(true);
+              setBookingData(record);
+            }}
           >
             Reject
           </Button>
@@ -156,6 +164,14 @@ const Dashboard = ({}: IProps) => {
       },
     },
     {
+      title: 'Reason of rejected',
+      dataIndex: 'rejectedReason',
+      key: 'rejectedReason',
+      width: '180px',
+      align: 'center' as const,
+      render: (text: string) => <div className="wordBreak">{text}</div>,
+    },
+    {
       title: 'Action',
       key: 'action',
       width: state.isAdmin ? '240px' : '140px',
@@ -170,32 +186,46 @@ const Dashboard = ({}: IProps) => {
     <Spin />
   ) : (
     <div>
-      <div className="toolbar">
-        <Button
-          size={'large'}
-          type="primary"
-          onClick={() => {
-            setOpenCreateModal(true);
-          }}
-        >
-          Create a Booking
-        </Button>
-      </div>
-      <Table columns={columns} dataSource={data} />
+      {!state.isAdmin ? (
+        <div className="toolbar">
+          <Button
+            size={'large'}
+            type="primary"
+            onClick={() => {
+              setOpenCreateModal(true);
+            }}
+          >
+            Create a Booking
+          </Button>
+        </div>
+      ) : null}
+      <Table
+        columns={columns}
+        dataSource={allBooking}
+        rowKey="id"
+        pagination={{
+          defaultPageSize: 5,
+        }}
+      />
 
       <CreateBookingModal
         open={openCreateModal}
         setOpenModal={setOpenCreateModal}
+        handleUpdateListBooking={handleUpdateListBooking}
       />
 
       <RejectBookingModal
         open={openRejectModal}
         setOpenModal={setOpenRejectModal}
+        handleUpdateListBooking={handleUpdateListBooking}
+        bookingData={bookingData}
       />
 
       <ApproveBookingModal
         open={openApproveModal}
         setOpenModal={setOpenApproveModal}
+        handleUpdateListBooking={handleUpdateListBooking}
+        bookingData={bookingData}
       />
     </div>
   );

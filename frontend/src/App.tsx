@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 import Login from './container/Login';
 import Dashboard from './container/Dashboard';
 import Layout from './container/Layout';
@@ -11,7 +11,7 @@ function App() {
   const { state, dispatch } = useContext(Context);
 
   const sessionData: ICommonState = useMemo(
-    () => getSessionDataByKey('isLogin'),
+    () => getSessionDataByKey('userInfo'),
     []
   );
 
@@ -24,10 +24,7 @@ function App() {
     }
   }, [sessionData, dispatch]);
 
-  console.log('state', state);
-  console.log('sessionData', sessionData);
-
-  return !state.isLogin && !sessionData?.isLogin ? (
+  return !state.id && !sessionData?.id ? (
     <Login />
   ) : (
     <Layout>

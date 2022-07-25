@@ -1,15 +1,15 @@
 import { commonState } from './constants';
 
 export interface ICommonState {
-  isLogin: boolean;
   isAdmin: boolean;
   fullName: string;
+  id: string | null;
 }
 
 export const initState: ICommonState = {
-  isLogin: false,
   isAdmin: false,
   fullName: '',
+  id: null,
 };
 
 function reducer(state: ICommonState, action: any) {
