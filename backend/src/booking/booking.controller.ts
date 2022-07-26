@@ -15,12 +15,12 @@ export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
   @Post()
-  async create(@Body('userId') userId: string, @Body('data') body: IBooking) {
+  create(@Body('userId') userId: string, @Body('data') body: IBooking) {
     return this.bookingService.create(userId, body);
   }
 
   @Get()
-  async findAll() {
+  findAll() {
     return this.bookingService.findAll();
   }
 

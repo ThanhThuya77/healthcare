@@ -16,7 +16,7 @@ export const BookingSchema = new mongoose.Schema({
   createdByUserId: String,
 });
 
-export interface IBooking extends mongoose.Document {
+export interface IBooking {
   id?: string;
   event: string;
   location: string;
@@ -26,3 +26,5 @@ export interface IBooking extends mongoose.Document {
   status?: string;
   createdByUserId?: string;
 }
+
+export type IBookingMg = IBooking & mongoose.Document;

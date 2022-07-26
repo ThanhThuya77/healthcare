@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model, Types } from 'mongoose';
-import { BookingStatus, IBooking } from './booking.model';
+import { Model } from 'mongoose';
+import { BookingStatus, IBooking, IBookingMg } from './booking.model';
 
 @Injectable()
 export class BookingService {
@@ -92,7 +92,7 @@ export class BookingService {
     return result;
   }
 
-  private async findBooking(bookingId: string): Promise<IBooking> {
+  private async findBooking(bookingId: string): Promise<IBookingMg> {
     let booking;
     try {
       booking = await this.bookingModel.findById(bookingId);
