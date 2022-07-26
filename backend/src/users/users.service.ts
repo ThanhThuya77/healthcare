@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { comparePassword, encodePassword } from 'src/utils/bcrypt';
 
 import { IUser } from './user.model';
 
@@ -8,23 +9,28 @@ import { IUser } from './user.model';
 export class UsersService {
   constructor(@InjectModel('User') private readonly userModel: Model<IUser>) {}
 
-  async login(userName: string, password: string): Promise<IUser> {
+  async login(userName: string, password: string) {
     let user;
 
     try {
-      user = await this.userModel.findOne({ userName, password });
+      user = await this.userModel.findOne({ userName });
+
+      if (user) {
+        const matched = comparePassword(password, user.password);
+
+        if (matched) {
+          return user;
+        }
+      }
+      throw new NotFoundException('The username or password is incorrect');
     } catch (error) {
       throw new NotFoundException('The username or password is incorrect');
     }
-
-    if (!user) {
-      throw new NotFoundException('The username or password is incorrect');
-    }
-    return user;
   }
 
   async insertUser(body: IUser) {
-    const newUser = new this.userModel(body);
+    const password = encodePassword(body.password);
+    const newUser = new this.userModel({ ...body, password });
     const result = await newUser.save();
     return result.id as string;
   }

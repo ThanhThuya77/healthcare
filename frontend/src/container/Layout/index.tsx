@@ -16,11 +16,11 @@ const LayoutComponent = ({ children }: IProps) => {
   const { state, dispatch } = useContext(Context);
 
   const handleLogout = () => {
+    sessionStorage.removeItem('userInfo');
     dispatch({
       type: commonState.SET_LOGIN_INFO,
-      payload: { id: null, isAdmin: false },
+      payload: { id: null },
     });
-    sessionStorage.removeItem('userInfo');
   };
 
   const profileActions = (

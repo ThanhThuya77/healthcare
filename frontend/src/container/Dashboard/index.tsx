@@ -19,12 +19,11 @@ import {
   IconTypeNotification,
   openNotification,
 } from '../../component/Notification';
+import moment from 'moment';
 
 const { confirm } = Modal;
 
-interface IProps {}
-
-const Dashboard = ({}: IProps) => {
+const Dashboard = () => {
   const { state } = useContext(Context);
   const [loading, setLoading] = useState<boolean>(true);
   const [allBooking, setAllBooking] = useState<IBooking[]>([]);
@@ -124,13 +123,13 @@ const Dashboard = ({}: IProps) => {
       title: 'Type of event',
       dataIndex: 'event',
       key: 'event',
+      width: '160px',
       render: (text: string) => text,
     },
     {
       title: 'Location',
       dataIndex: 'location',
       key: 'location',
-      width: '220px',
       render: (text: string) => text,
     },
     {
@@ -162,6 +161,17 @@ const Dashboard = ({}: IProps) => {
           </Tag>
         );
       },
+    },
+    {
+      title: 'Confirm propose date',
+      dataIndex: 'confirmProposedDate',
+      key: 'confirmProposedDate',
+      width: '180px',
+      align: 'center' as const,
+      render: (_: any, record: IBooking) =>
+        record.confirmProposedDate
+          ? moment(record.confirmProposedDate).format('MM-DD-YYYY HH:mm:ss')
+          : '',
     },
     {
       title: 'Reason of rejected',

@@ -40,7 +40,7 @@ const Login = () => {
           <h3 className="title">Login</h3>
         </Form.Item>
         <Form.Item
-          label="Email"
+          label="Username"
           name="userName"
           rules={[
             {
